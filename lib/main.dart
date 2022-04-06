@@ -2,8 +2,11 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 //import 'package:requests/requests.dart';
 import 'package:http/http.dart' as http;
+import 'package:login_view/SecondScreen.dart';
+import 'package:auto_size_text/auto_size_text.dart';
 
 void main() {
   runApp(const MyApp());
@@ -61,7 +64,7 @@ class _MyHomePageState extends State<MyHomePage> {
   final double _fontLittleSize = 16;
   final double _fontBigSize = 25;
   final double _fontMidiumSize = 20;
-
+  String _error = '';
   Widget _userNameField() {
     return TextFormField(
       decoration: InputDecoration(
@@ -106,7 +109,7 @@ class _MyHomePageState extends State<MyHomePage> {
     try {
       String _url = 'http://10.0.2.2:8080/api';
       String _clientToken =
-          '\$2y\$10\$PI2YcydhsRKdXiiq.K55mu5Bi9jcnucMzxf8xgFfnT2MtPHAXFW5W';
+          '\$2y\$10\$o58W2A5OsMBVsbZDgRXO8eIPT249hu0wSB2Y1L8IhPh5OH/sVdkPy';
       Map<String, String> _header = {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
@@ -116,8 +119,16 @@ class _MyHomePageState extends State<MyHomePage> {
       final response = await http.post('$_url/auth/login',
           headers: _header, body: jsonEncode(_user));
       print(response.body);
+
+      if (response.statusCode != 401) {
+        Navigator.push(
+            context, MaterialPageRoute(builder: (context) => SecondScreen()));
+      }
     } catch (err) {
       print(err);
+      setState(() {
+        _error = 'Login Incorrecto';
+      });
     }
   }
 
@@ -182,6 +193,39 @@ class _MyHomePageState extends State<MyHomePage> {
     ]);
   }
 
+  Widget showAlert() {
+    if (_error != '') {
+      return Container(
+        color: Colors.orangeAccent,
+        width: double.infinity,
+        padding: EdgeInsets.all(8.0),
+        child: Row(
+          children: <Widget>[
+            Padding(
+              padding: const EdgeInsets.only(right: 8.0),
+              child: Icon(Icons.error_outline),
+            ),
+            Expanded(
+                child: AutoSizeText(
+              _error,
+              maxLines: 3,
+            )),
+            IconButton(
+                onPressed: () {
+                  setState(() {
+                    _error = '';
+                  });
+                },
+                icon: Icon(Icons.close)),
+          ],
+        ),
+      );
+    }
+    return SizedBox(
+      height: 0,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -190,6 +234,7 @@ class _MyHomePageState extends State<MyHomePage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
+            showAlert(),
             Container(
                 margin: const EdgeInsets.symmetric(horizontal: 25.0),
                 child: Column(
