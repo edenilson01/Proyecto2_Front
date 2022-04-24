@@ -1,14 +1,14 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
-class SecondScreen extends StatelessWidget {
+class OrdersListMobile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'route',
       home: Scaffold(
         appBar: AppBar(
-          title: Text('Second Screen'),
+          title: Text('Lista Pedidos Movil'),
         ),
         body: Center(
           child: RaisedButton(

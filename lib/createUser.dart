@@ -1,22 +1,13 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:flutter/foundation.dart' show kIsWeb;
 
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 //import 'package:requests/requests.dart';
 import 'package:http/http.dart' as http;
-import 'package:login_view/employeeList.dart';
-import 'package:auto_size_text/auto_size_text.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
-import 'package:login_view/ordersListMobile.dart';
-import 'package:login_view/ordersListWeb.dart';
 
-void main() {
-  runApp(const MyApp());
-}
-
-class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
+class CreateUser extends StatelessWidget {
+  const CreateUser({Key? key}) : super(key: key);
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
@@ -33,13 +24,13 @@ class MyApp extends StatelessWidget {
           // Notice that the counter didn't reset back to zero; the application
           // is not restarted.
           primarySwatch: Colors.deepOrange),
-      home: const MyHomePage(title: 'Login Delivery'),
+      home: const CreateUserPage(title: 'Agregar Usuarios'),
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({Key? key, required this.title}) : super(key: key);
+class CreateUserPage extends StatefulWidget {
+  const CreateUserPage({Key? key, required this.title}) : super(key: key);
 
   // This widget is the home page of your application. It is stateful, meaning
   // that it has a State object (defined below) that contains fields that affect
@@ -53,42 +44,82 @@ class MyHomePage extends StatefulWidget {
   final String title;
 
   @override
-  State<MyHomePage> createState() => _MyHomePageState();
+  State<CreateUserPage> createState() => _CreateUserPage();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
+class _CreateUserPage extends State<CreateUserPage> {
   //static const TextStyle _globalFontStyle = TextStyle(
   //  fontSize: 25, fontWeight: FontWeight.bold, fontFamily: 'Open sans');
 
   final _formKey = GlobalKey<FormState>();
-  String _username = '';
-  String _userpass = '';
+  String _name = '';
+  String _email = '';
+  String _phoneNumber = '';
+  String _password = '';
   final String _fontFamily = 'Open sans';
   final double _fontLittleSize = 16;
   final double _fontBigSize = 25;
   final double _fontMidiumSize = 20;
-  String _error = '';
-  Widget _userNameField() {
-    return _formFieldSized(TextFormField(
+
+  Widget _emailField() {
+    return TextFormField(
       decoration: InputDecoration(
-          labelText: 'Usuario',
+          labelText: 'Correo Electrónico',
           labelStyle:
               TextStyle(fontFamily: _fontFamily, fontSize: _fontLittleSize)),
       keyboardType: TextInputType.name,
       validator: (value) {
         if (value != null && value.isEmpty) {
-          return 'El usuario es requerido';
+          return 'El Email es requerido';
         }
         return null;
       },
       onChanged: (value) => setState(() {
-        _username = value;
+        _email = value;
       }),
-    ));
+    );
   }
 
-  Widget _userPassField() {
-    return _formFieldSized(TextFormField(
+  Widget _nameField() {
+    return TextFormField(
+      decoration: InputDecoration(
+          labelText: 'Nombre',
+          labelStyle:
+              TextStyle(fontFamily: _fontFamily, fontSize: _fontLittleSize)),
+      keyboardType: TextInputType.name,
+      validator: (value) {
+        if (value != null && value.isEmpty) {
+          return 'El Nombre es requerido';
+        }
+        return null;
+      },
+      onChanged: (value) => setState(() {
+        _name = value;
+      }),
+    );
+  }
+
+  Widget _phoneNumberField() {
+    return TextFormField(
+      decoration: InputDecoration(
+          labelText: 'Número de teléfono',
+          labelStyle:
+              TextStyle(fontFamily: _fontFamily, fontSize: _fontLittleSize)),
+      keyboardType: TextInputType.name,
+      validator: (value) {
+        if (value != null && value.isEmpty) {
+          return 'El número de teléfono es requerido';
+        }
+        return null;
+      },
+      onChanged: (value) => setState(() {
+        _phoneNumber = value;
+      }),
+    );
+  }
+
+  Widget _passwordField() {
+    return TextFormField(
       decoration: InputDecoration(
           labelText: 'Contraseña',
           labelStyle:
@@ -102,9 +133,9 @@ class _MyHomePageState extends State<MyHomePage> {
         return null;
       },
       onChanged: (value) => setState(() {
-        _userpass = value;
+        _password = value;
       }),
-    ));
+    );
   }
 
   void _getData() async {
@@ -112,41 +143,24 @@ class _MyHomePageState extends State<MyHomePage> {
     try {
       String _url =
           kIsWeb ? 'http://localhost:8080/api' : 'http://10.0.2.2:8080/api';
-      String _clientToken =
-          '\$2y\$10\$jqqSeqpgKoF1eOs9sDcaTuQNqkGq37Iir6ruPGOpmtKjJpWkeNyVO';
+      String _authToken =
+          'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC9sb2NhbGhvc3Q6ODA4MFwvYXBpXC9hdXRoXC9sb2dpbiIsImlhdCI6MTY0OTQ1OTM2OCwiZXhwIjoxNjQ5NDYyOTY4LCJuYmYiOjE2NDk0NTkzNjgsImp0aSI6IjZkOFI2dTlLTUQ0VmIwbWIiLCJzdWIiOjIsInBydiI6IjEzZThkMDI4YjM5MWYzYjdiNjNmMjE5MzNkYmFkNDU4ZmYyMTA3MmUifQ._RqfWVGbVpnU8GIoWhrCXx2GaBWVO168fwHQBi1IGkQ';
       Map<String, String> _header = {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
-        'client': _clientToken
+        'Authorization': 'Bearer ' + _authToken
       };
-      Map<String, String> _user = {'email': _username, 'password': _userpass};
-      final response = await http.post('$_url/auth/login',
+      Map<String, String> _user = {
+        'name': _name,
+        'email': _email,
+        'password': _password,
+        'phone': _phoneNumber
+      };
+      final response = await http.post('$_url/users',
           headers: _header, body: jsonEncode(_user));
       print(response.body);
-
-      // if (response.statusCode != 401) {
-      Widget viewToRedirect;
-      viewToRedirect = kIsWeb ? OrdersListWeb() : OrdersListMobile();
-      Navigator.push(
-          context, MaterialPageRoute(builder: (context) => viewToRedirect));
-      // } else {
-      //   setState(() {
-      //     _error = 'Login Incorrecto';
-      //   });
-      // }
     } catch (err) {
       print(err);
-      setState(() {
-        _error = 'Login Incorrecto';
-      });
-    }
-  }
-
-  Widget _formFieldSized(Widget field) {
-    if (kIsWeb) {
-      return SizedBox(width: 500, child: field);
-    } else {
-      return field;
     }
   }
 
@@ -154,30 +168,40 @@ class _MyHomePageState extends State<MyHomePage> {
     return Form(
         key: _formKey,
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            _userNameField(),
+            _nameField(),
             const SizedBox(height: 15.0),
-            _userPassField(),
+            _emailField(),
+            const SizedBox(height: 15.0),
+            _phoneNumberField(),
+            const SizedBox(height: 15.0),
+            _passwordField(),
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 30.0),
               child: Center(
                   child: ElevatedButton.icon(
                 onPressed: () {
                   if (_formKey.currentState!.validate()) {
-                    print(_username);
-                    print(_userpass);
+                    print(_email);
+                    print(_password);
+                    print(_phoneNumber);
+                    print(_name);
                     _getData();
+                    //var r = await Requests.get('http://localhost:8080/api/');
+                    // r.raiseForStatus();
+                    // String body = kr.content();
+                    // print(body);
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(content: Text('Processing Data')),
                     );
                   }
                 },
                 style: ElevatedButton.styleFrom(
-                    fixedSize: const Size(180, 50),
-                    textStyle: const TextStyle(fontSize: 21)),
-                label: const Text('LOGIN'),
-                icon: const Icon(Icons.arrow_forward),
+                    fixedSize: const Size(120, 40),
+                    textStyle: const TextStyle(fontSize: 19)),
+                label: const Text('Crear'),
+                icon: const Icon(Icons.group_add_outlined),
               )),
             ),
           ],
@@ -185,10 +209,10 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Widget _loginHeader() {
-    return Row(mainAxisAlignment: MainAxisAlignment.center, children: <Widget>[
+    return Row(children: <Widget>[
       Column(children: <Widget>[
         Text(
-          'LOGIN',
+          'ADD USER',
           style: TextStyle(
               fontSize: _fontBigSize,
               fontWeight: FontWeight.bold,
@@ -207,56 +231,27 @@ class _MyHomePageState extends State<MyHomePage> {
     ]);
   }
 
-  Widget showAlert() {
-    if (_error != '') {
-      return Container(
-        color: Colors.orangeAccent,
-        width: double.infinity,
-        padding: EdgeInsets.all(8.0),
-        child: Row(
-          children: <Widget>[
-            Padding(
-              padding: const EdgeInsets.only(right: 8.0),
-              child: Icon(Icons.error_outline),
-            ),
-            Expanded(
-                child: AutoSizeText(
-              _error,
-              maxLines: 3,
-            )),
-            IconButton(
-                onPressed: () {
-                  setState(() {
-                    _error = '';
-                  });
-                },
-                icon: Icon(Icons.close)),
-          ],
-        ),
-      );
-    }
-    return SizedBox(
-      height: 0,
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFededed),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            showAlert(),
-            Container(
-                margin: const EdgeInsets.symmetric(horizontal: 25.0),
-                child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: <Widget>[_loginHeader(), _loginForm()]))
-          ],
-        ),
-      ),
-    );
+        backgroundColor: const Color(0xFFededed),
+        resizeToAvoidBottomInset: false,
+        body: SingleChildScrollView(
+          child: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
+                Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 25.0),
+                    child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: <Widget>[
+                          Center(child: _loginHeader()),
+                          _loginForm()
+                        ]))
+              ],
+            ),
+          ),
+        ));
   }
 }
