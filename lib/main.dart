@@ -67,6 +67,7 @@ class _MyHomePageState extends State<MyHomePage> {
   final double _fontLittleSize = 16;
   final double _fontBigSize = 25;
   final double _fontMidiumSize = 20;
+
   String _error = '';
   Widget _userNameField() {
     return _formFieldSized(TextFormField(
@@ -107,38 +108,77 @@ class _MyHomePageState extends State<MyHomePage> {
     ));
   }
 
+  void _messageBox(String _message, {String title = 'ERROR'}) {
+    showDialog(
+        context: context,
+        builder: (BuildContext) {
+          return AlertDialog(
+              title: Text(title),
+              content: Text(_message),
+              actions: <Widget>[
+                ElevatedButton(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                    child: const Text('OK'))
+              ]);
+        });
+  }
+
   void _getData() async {
     print('Metodo POST');
+    String _url =
+        kIsWeb ? 'http://localhost:8080/api' : 'http://10.0.2.2:8080/api';
     try {
-      String _url =
-          kIsWeb ? 'http://localhost:8080/api' : 'http://10.0.2.2:8080/api';
+      // LOGIN
       String _clientToken =
-          '\$2y\$10\$jqqSeqpgKoF1eOs9sDcaTuQNqkGq37Iir6ruPGOpmtKjJpWkeNyVO';
+          '\$2y\$10\$LTEhuI5dvpTyZMiAMfagzOOxmLhnRXmTJFKxImSELEEwH.uTegdmK';
       Map<String, String> _header = {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
         'client': _clientToken
       };
       Map<String, String> _user = {'email': _username, 'password': _userpass};
-      final response = await http.post('$_url/auth/login',
+      var response = await http.post('$_url/auth/login',
           headers: _header, body: jsonEncode(_user));
-      print(response.body);
+      var _userData = json.decode(response.body)['data'];
 
-      // if (response.statusCode != 401) {
-      Widget viewToRedirect;
-      viewToRedirect = kIsWeb ? OrdersListWeb() : OrdersListMobile();
-      Navigator.push(
-          context, MaterialPageRoute(builder: (context) => viewToRedirect));
-      // } else {
-      //   setState(() {
-      //     _error = 'Login Incorrecto';
-      //   });
-      // }
+      var _userToken = _userData['access_token'];
+      if (response.statusCode != 401) {
+        //VERIFICAR ROL USUARIO
+        _header = {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': 'Bearer ' + _userToken
+        };
+
+        var _userId = _userData['user'];
+        response =
+            await http.get('$_url/users/$_userId/roles', headers: _header);
+        var _userRoles = json.decode(response.body)['data'];
+        var _roleToAccess = kIsWeb ? 'administrador' : 'repartidor';
+        var _accessVerified = false;
+        for (var _role in _userRoles) {
+          print(_role['name']);
+          if (_role['name'] == _roleToAccess) {
+            _accessVerified = true;
+            break;
+          }
+        }
+        if (_accessVerified) {
+          Widget viewToRedirect =
+              kIsWeb ? OrdersListWeb(_userToken) : OrdersListMobile();
+          Navigator.push(
+              context, MaterialPageRoute(builder: (context) => viewToRedirect));
+        } else {
+          _messageBox('ROL INCORRECTO');
+        }
+      } else {
+        _messageBox('LOGIN INCORRECTO');
+      }
     } catch (err) {
       print(err);
-      setState(() {
-        _error = 'Login Incorrecto';
-      });
+      _messageBox('LOGIN INCORRECTO');
     }
   }
 
@@ -245,6 +285,7 @@ class _MyHomePageState extends State<MyHomePage> {
     return Scaffold(
       backgroundColor: const Color(0xFFededed),
       body: Center(
+          child: SingleChildScrollView(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
@@ -256,7 +297,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     children: <Widget>[_loginHeader(), _loginForm()]))
           ],
         ),
-      ),
+      )),
     );
   }
 }

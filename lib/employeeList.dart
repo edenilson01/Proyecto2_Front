@@ -9,7 +9,8 @@ import 'editEmployeeForm.dart';
 import 'models/usuario.dart';
 
 class EmployeeList extends StatelessWidget {
-  const EmployeeList({Key? key}) : super(key: key);
+  final String _authToken;
+  const EmployeeList(this._authToken, {Key? key}) : super(key: key);
 
   // This widget is the root of your application.
   @override
@@ -17,13 +18,18 @@ class EmployeeList extends StatelessWidget {
     return MaterialApp(
       title: 'JEM - Software',
       theme: ThemeData(primarySwatch: Colors.deepOrange),
-      home: const EmployeeListPage(title: 'Empleados'),
+      home: EmployeeListPage(this._authToken, title: 'Empleados'),
     );
   }
 }
 
 class EmployeeListPage extends StatefulWidget {
-  const EmployeeListPage({Key? key, required this.title}) : super(key: key);
+  final String authToken;
+  const EmployeeListPage(
+    this.authToken, {
+    Key? key,
+    required this.title,
+  }) : super(key: key);
 
   // This widget is the home page of your application. It is stateful, meaning
   // that it has a State object (defined below) that contains fields that affect
@@ -40,34 +46,7 @@ class EmployeeListPage extends StatefulWidget {
 }
 
 class _EmployeeListPage extends State<EmployeeListPage> {
-  Future<String> _loginUser() async {
-    print('Metodo POST LOGIN');
-    try {
-      String _url =
-          kIsWeb ? 'http://localhost:8080/api' : 'http://10.0.2.2:8080/api';
-      String _clientToken =
-          '\$2y\$10\$PI2YcydhsRKdXiiq.K55mu5Bi9jcnucMzxf8xgFfnT2MtPHAXFW5W';
-      Map<String, String> _header = {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        'client': _clientToken
-      };
-      Map<String, String> _user = {
-        'email': 'edenilsonosnardominguez@gmail.com',
-        'password': '123456'
-      };
-      final response = await http.post('$_url/auth/login',
-          headers: _header, body: jsonEncode(_user));
-      //print(json.decode(response.body)['data']['access_token']);
-      return json.decode(response.body)['data']['access_token'];
-    } catch (err) {
-      print(err);
-      return 'ERROR';
-    }
-  }
-
   Future<List<Usuario>> _getUserList() async {
-    var auth_token = await _loginUser();
     print('GET USER');
     List<Usuario> _usuarios = [];
     try {
@@ -77,7 +56,7 @@ class _EmployeeListPage extends State<EmployeeListPage> {
       Map<String, String> _header = {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
-        'Authorization': 'Bearer ' + auth_token
+        'Authorization': 'Bearer ' + widget.authToken
       };
       final response = await http.get('$_url/users', headers: _header);
       var body = json.decode(response.body)['data'];
@@ -92,7 +71,6 @@ class _EmployeeListPage extends State<EmployeeListPage> {
   }
 
   void _deleteUser(employeeId) async {
-    var auth_token = await _loginUser();
     print('DELETE USER');
     try {
       String _url =
@@ -100,7 +78,7 @@ class _EmployeeListPage extends State<EmployeeListPage> {
       Map<String, String> _header = {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
-        'Authorization': 'Bearer ' + auth_token
+        'Authorization': 'Bearer ' + widget.authToken
       };
       final response =
           await http.delete('$_url/users/' + employeeId, headers: _header);
@@ -145,16 +123,20 @@ class _EmployeeListPage extends State<EmployeeListPage> {
                     context,
                     MaterialPageRoute(
                         builder: (context) =>
-                            EditEmployee(idEmployee: employeeId)));
+                            EditEmployee(widget.authToken, employeeId)));
               },
-              child: Text('Editar')),
-          const SizedBox(width: 10.0),
+              child: const Icon(Icons.edit_note_outlined)),
+          const SizedBox(width: 6.0),
           ElevatedButton(
+              style: ElevatedButton.styleFrom(primary: Colors.red),
               onPressed: () {
                 var employeeId = '${data?.id}';
-                _deleteUser(employeeId);
+                var employeeName = '${data?.name}';
+                _messageBox(
+                    'Estas seguro que desea eliminar el usuario "$employeeName"',
+                    employeeId);
               },
-              child: Text('Eliminar'))
+              child: const Icon(Icons.delete_forever_outlined))
         ]))
       ]));
     }
@@ -172,6 +154,27 @@ class _EmployeeListPage extends State<EmployeeListPage> {
     ], rows: rows));
   }
 
+  void _messageBox(String _message, employeeId) {
+    showDialog(
+        context: context,
+        builder: (BuildContext) {
+          return AlertDialog(content: Text(_message), actions: <Widget>[
+            ElevatedButton(
+                style: ElevatedButton.styleFrom(primary: Colors.red),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                child: const Icon(Icons.cancel_sharp)),
+            const SizedBox(width: 5.0),
+            ElevatedButton(
+                onPressed: () {
+                  //_deleteUser(employeeId);
+                },
+                child: const Icon(Icons.check_circle_outline_outlined))
+          ]);
+        });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -182,11 +185,26 @@ class _EmployeeListPage extends State<EmployeeListPage> {
             alignment: Alignment.center,
             child: Column(children: [
               const SizedBox(height: 15.0),
-              Row(mainAxisAlignment: MainAxisAlignment.end, children: [
+              Row(mainAxisAlignment: MainAxisAlignment.start, children: [
+                const SizedBox(width: 30.0),
                 ElevatedButton.icon(
                   onPressed: () {
-                    Navigator.push(context,
-                        MaterialPageRoute(builder: (context) => CreateUser()));
+                    Navigator.pop(context);
+                  },
+                  style: ElevatedButton.styleFrom(
+                      fixedSize: const Size(230, 40),
+                      textStyle: const TextStyle(fontSize: 15)),
+                  label: const Text('Atras'),
+                  icon: const Icon(Icons.keyboard_arrow_left_outlined),
+                ),
+                const Spacer(flex: 2),
+                ElevatedButton.icon(
+                  onPressed: () {
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) =>
+                                CreateUser(widget.authToken)));
                   },
                   style: ElevatedButton.styleFrom(
                       fixedSize: const Size(230, 40),
