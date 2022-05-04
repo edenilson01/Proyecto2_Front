@@ -14,36 +14,18 @@ class CreateUser extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'JEM - Software',
-      theme: ThemeData(
-          // This is the theme of your application.
-          //
-          // Try running your application with "flutter run". You'll see the
-          // application has a blue toolbar. Then, without quitting the app, try
-          // changing the primarySwatch below to Colors.green and then invoke
-          // "hot reload" (press "r" in the console where you ran "flutter run",
-          // or simply save your changes to "hot reload" in a Flutter IDE).
-          // Notice that the counter didn't reset back to zero; the application
-          // is not restarted.
-          primarySwatch: Colors.deepOrange),
-      home: CreateUserPage(this.authToken, title: 'Agregar Usuario'),
+      theme: ThemeData(primarySwatch: Colors.deepOrange),
+      home: CreateUserPage(this.authToken, context, title: 'Agregar Usuario'),
     );
   }
 }
 
 class CreateUserPage extends StatefulWidget {
+  final BuildContext context;
   final String authToken;
-  const CreateUserPage(this.authToken, {Key? key, required this.title})
+  const CreateUserPage(this.authToken, this.context,
+      {Key? key, required this.title})
       : super(key: key);
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
   final String title;
 
   @override
@@ -58,9 +40,9 @@ class _CreateUserPage extends State<CreateUserPage> {
   String _name = '';
   String _email = '';
   String _phoneNumber = '';
-  String _password = '';
   String _passwordVerified = '';
   String _selectedRole = '';
+  final TextEditingController _password = TextEditingController();
   final String _fontFamily = 'Open sans';
   final double _fontLittleSize = 16;
   final double _fontBigSize = 25;
@@ -70,42 +52,40 @@ class _CreateUserPage extends State<CreateUserPage> {
     return SizedBox(
         width: 500,
         child: TextFormField(
-          decoration: InputDecoration(
-              labelText: 'Correo Electrónico',
-              labelStyle: TextStyle(
-                  fontFamily: _fontFamily, fontSize: _fontLittleSize)),
-          keyboardType: TextInputType.name,
-          validator: (value) {
-            if (value != null && value.isEmpty) {
-              return 'El email es requerido';
-            }
-            return null;
-          },
-          onChanged: (value) => setState(() {
-            _email = value;
-          }),
-        ));
+            decoration: InputDecoration(
+                labelText: 'Correo Electrónico',
+                labelStyle: TextStyle(
+                    fontFamily: _fontFamily, fontSize: _fontLittleSize)),
+            keyboardType: TextInputType.name,
+            validator: (value) {
+              if (value != null && value.isEmpty) {
+                return 'El email es requerido';
+              }
+              return null;
+            },
+            onSaved: (value) {
+              _email = value ?? "";
+            }));
   }
 
   Widget _nameField() {
     return SizedBox(
         width: 500,
         child: TextFormField(
-          decoration: InputDecoration(
-              labelText: 'Nombre',
-              labelStyle: TextStyle(
-                  fontFamily: _fontFamily, fontSize: _fontLittleSize)),
-          keyboardType: TextInputType.name,
-          validator: (value) {
-            if (value != null && value.isEmpty) {
-              return 'El Nombre es requerido';
-            }
-            return null;
-          },
-          onChanged: (value) => setState(() {
-            _name = value;
-          }),
-        ));
+            decoration: InputDecoration(
+                labelText: 'Nombre',
+                labelStyle: TextStyle(
+                    fontFamily: _fontFamily, fontSize: _fontLittleSize)),
+            keyboardType: TextInputType.name,
+            validator: (value) {
+              if (value != null && value.isEmpty) {
+                return 'El Nombre es requerido';
+              }
+              return null;
+            },
+            onSaved: (value) {
+              _name = value ?? "";
+            }));
   }
 
   Widget _phoneNumberField() {
@@ -123,9 +103,9 @@ class _CreateUserPage extends State<CreateUserPage> {
             }
             return null;
           },
-          onChanged: (value) => setState(() {
-            _phoneNumber = value;
-          }),
+          onSaved: (value) {
+            _phoneNumber = value ?? "";
+          },
         ));
   }
 
@@ -133,6 +113,7 @@ class _CreateUserPage extends State<CreateUserPage> {
     return SizedBox(
         width: 500,
         child: TextFormField(
+          controller: _password,
           decoration: InputDecoration(
               labelText: 'Contraseña',
               labelStyle: TextStyle(
@@ -145,9 +126,9 @@ class _CreateUserPage extends State<CreateUserPage> {
             }
             return null;
           },
-          onChanged: (value) => setState(() {
-            _password = value;
-          }),
+          // onSaved: (value) {
+          //   _password = value ?? "";
+          // }
         ));
   }
 
@@ -155,27 +136,27 @@ class _CreateUserPage extends State<CreateUserPage> {
     return SizedBox(
         width: 500,
         child: TextFormField(
-          decoration: InputDecoration(
-              labelText: 'Verificar Contraseña',
-              labelStyle: TextStyle(
-                  fontFamily: _fontFamily, fontSize: _fontLittleSize)),
-          obscureText: true,
-          keyboardType: TextInputType.visiblePassword,
-          validator: (value) {
-            if (value != null && value.isEmpty) {
-              return 'Contraseña requerida';
-            } else if (value != _password) {
-              return 'Las Contraseñas no Coinciden';
-            }
-            return null;
-          },
-          onChanged: (value) => setState(() {
-            _passwordVerified = value;
-          }),
-        ));
+            decoration: InputDecoration(
+                labelText: 'Verificar Contraseña',
+                labelStyle: TextStyle(
+                    fontFamily: _fontFamily, fontSize: _fontLittleSize)),
+            obscureText: true,
+            keyboardType: TextInputType.visiblePassword,
+            validator: (value) {
+              if (value != null && value.isEmpty) {
+                return 'Contraseña requerida';
+              } else if (value != _password.text) {
+                return 'Las Contraseñas no Coinciden';
+              }
+              return null;
+            },
+            onSaved: (value) {
+              _passwordVerified = value ?? "";
+            }));
   }
 
   void _getData() async {
+    print(_selectedRole);
     // print('Metodo POST');
     // try {
     //   String _url =
@@ -190,7 +171,7 @@ class _CreateUserPage extends State<CreateUserPage> {
     //   Map<String, String> _user = {
     //     'name': _name,
     //     'email': _email,
-    //     'password': _password,
+    //     'password': _password.text,
     //     'phone': _phoneNumber
     //   };
     //   final response = await http.post('$_url/users',
@@ -228,7 +209,7 @@ class _CreateUserPage extends State<CreateUserPage> {
                     //   _selectedRole;
                     //   print(_selectedRole);
                     // });
-                    FocusScope.of(context).requestFocus(FocusNode());
+                    FocusScope.of(widget.context).requestFocus(FocusNode());
                   },
                   value: _selectedRole,
                   items: data?.map<DropdownMenuItem<String>>((roles) {
@@ -292,7 +273,7 @@ class _CreateUserPage extends State<CreateUserPage> {
                   Row(mainAxisAlignment: MainAxisAlignment.center, children: [
                 ElevatedButton.icon(
                   onPressed: () {
-                    Navigator.pop(context);
+                    Navigator.pop(widget.context);
                   },
                   style: ElevatedButton.styleFrom(
                       fixedSize: const Size(180, 40),
@@ -304,8 +285,9 @@ class _CreateUserPage extends State<CreateUserPage> {
                 ElevatedButton.icon(
                   onPressed: () {
                     if (_formKey.currentState!.validate()) {
+                      _formKey.currentState!.save();
                       print(_email);
-                      print(_password);
+                      print(_password.text);
                       print(_phoneNumber);
                       print(_name);
                       print(_passwordVerified);

@@ -17,7 +17,7 @@ class EditEmployee extends StatelessWidget {
     return MaterialApp(
       title: 'JEM - Software',
       theme: ThemeData(primarySwatch: Colors.deepOrange),
-      home: EditEmployeePage(this.authToken,
+      home: EditEmployeePage(this.authToken, context,
           title: 'Editar Empleado', idEmployee: this.idEmployee),
     );
   }
@@ -25,7 +25,8 @@ class EditEmployee extends StatelessWidget {
 
 class EditEmployeePage extends StatefulWidget {
   final String authToken;
-  const EditEmployeePage(this.authToken,
+  final BuildContext context;
+  const EditEmployeePage(this.authToken, this.context,
       {Key? key, required this.title, required this.idEmployee})
       : super(key: key);
   final String title;
@@ -197,7 +198,7 @@ class _EditEmployeePage extends State<EditEmployeePage> {
                 //   _selectedRole;
                 //   print(_selectedRole);
                 // });
-                FocusScope.of(context).requestFocus(FocusNode());
+                FocusScope.of(widget.context).requestFocus(FocusNode());
               },
               value: _selectedRole,
               items: data?.map<DropdownMenuItem<String>>((roles) {
@@ -250,7 +251,7 @@ class _EditEmployeePage extends State<EditEmployeePage> {
                           children: [
                         ElevatedButton.icon(
                           onPressed: () {
-                            Navigator.pop(context);
+                            Navigator.pop(widget.context);
                           },
                           style: ElevatedButton.styleFrom(
                               fixedSize: const Size(180, 40),

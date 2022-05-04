@@ -18,15 +18,17 @@ class EmployeeList extends StatelessWidget {
     return MaterialApp(
       title: 'JEM - Software',
       theme: ThemeData(primarySwatch: Colors.deepOrange),
-      home: EmployeeListPage(this._authToken, title: 'Empleados'),
+      home: EmployeeListPage(this._authToken, context, title: 'Empleados'),
     );
   }
 }
 
 class EmployeeListPage extends StatefulWidget {
   final String authToken;
+  final BuildContext context;
   const EmployeeListPage(
-    this.authToken, {
+    this.authToken,
+    this.context, {
     Key? key,
     required this.title,
   }) : super(key: key);
@@ -83,9 +85,39 @@ class _EmployeeListPage extends State<EmployeeListPage> {
       final response =
           await http.delete('$_url/users/' + employeeId, headers: _header);
       print(response.body);
+      if (response.statusCode == 200) {
+        _statusBox('Se ha eliminado correctamente el usuario',
+            title: '', reload: true);
+      } else {
+        _statusBox('Ocurrio un error al eliminar', title: '');
+      }
     } catch (err) {
       print(err);
     }
+  }
+
+  void _statusBox(String _message, {String title = 'ERROR', reload = false}) {
+    showDialog(
+        context: widget.context,
+        builder: (BuildContext) {
+          return AlertDialog(
+              content: Text(_message),
+              title: Text(title),
+              actions: <Widget>[
+                ElevatedButton(
+                    onPressed: () {
+                      if (reload) {
+                        //EmployeeList(widget.authToken);
+                        print('RECARGAR');
+                        // Navigator.popAndPushNamed(widget.context, MaterialPageRoute(
+                        // builder: (context) => EmployeeList(this._authToken)));
+                      } else {
+                        Navigator.of(widget.context).pop();
+                      }
+                    },
+                    child: const Icon(Icons.check_circle_outline_outlined))
+              ]);
+        });
   }
 
   Widget createTable(datas) {
@@ -119,11 +151,11 @@ class _EmployeeListPage extends State<EmployeeListPage> {
           ElevatedButton(
               onPressed: () {
                 var employeeId = '${data?.id}';
-                Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) =>
-                            EditEmployee(widget.authToken, employeeId)));
+                // Navigator.push(
+                //     context,
+                //     MaterialPageRoute(
+                //         builder: (context) =>
+                //             EditEmployee(widget.authToken, employeeId)));
               },
               child: const Icon(Icons.edit_note_outlined)),
           const SizedBox(width: 6.0),
@@ -156,19 +188,19 @@ class _EmployeeListPage extends State<EmployeeListPage> {
 
   void _messageBox(String _message, employeeId) {
     showDialog(
-        context: context,
+        context: widget.context,
         builder: (BuildContext) {
           return AlertDialog(content: Text(_message), actions: <Widget>[
             ElevatedButton(
                 style: ElevatedButton.styleFrom(primary: Colors.red),
                 onPressed: () {
-                  Navigator.of(context).pop();
+                  Navigator.of(widget.context).pop();
                 },
                 child: const Icon(Icons.cancel_sharp)),
             const SizedBox(width: 5.0),
             ElevatedButton(
                 onPressed: () {
-                  //_deleteUser(employeeId);
+                  _deleteUser(employeeId);
                 },
                 child: const Icon(Icons.check_circle_outline_outlined))
           ]);
@@ -189,7 +221,7 @@ class _EmployeeListPage extends State<EmployeeListPage> {
                 const SizedBox(width: 30.0),
                 ElevatedButton.icon(
                   onPressed: () {
-                    Navigator.pop(context);
+                    Navigator.pop(widget.context);
                   },
                   style: ElevatedButton.styleFrom(
                       fixedSize: const Size(230, 40),
